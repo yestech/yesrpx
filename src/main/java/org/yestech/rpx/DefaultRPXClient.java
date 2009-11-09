@@ -59,7 +59,7 @@ public class DefaultRPXClient implements RPXClient {
         url.append("map");
         url.append("?identifier=").append(identifier);
         url.append("&primaryKey=").append(primaryKey);
-        url.append("&overwrise=").append(overwrite);
+        url.append("&overwrite=").append(overwrite);
 
         HttpClient client = getHttpClient();
         GetMethod get = new GetMethod(url.toString());
