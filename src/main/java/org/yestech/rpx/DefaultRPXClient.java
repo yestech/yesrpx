@@ -4,20 +4,25 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.json.JSONException;
 import org.json.JSONObject;
-import static org.yestech.rpx.RPXClient.Provider.GOOGLE;
-import static org.yestech.rpx.RPXClient.Provider.MICROSOFT_LIVE;
 import org.yestech.rpx.auth.GoogleAuthProvider;
 import org.yestech.rpx.auth.MicrosoftLiveProvider;
 import org.yestech.rpx.auth.RPXAuthProvider;
 import org.yestech.rpx.objectmodel.*;
 import static org.yestech.rpx.objectmodel.RPXUtil.jsonString;
+import static org.yestech.rpx.RPXClient.Provider.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 /**
  * @author A.J. Wright
  */
 public class DefaultRPXClient implements RPXClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultRPXClient.class);
 
     private static final String RPX_API_URL = "https://rpxnow.com/api/v2/";
 
@@ -76,21 +81,50 @@ public class DefaultRPXClient implements RPXClient {
         }
     }
 
+    public MappingsResponse getMappings(String primaryKey) throws IOException, JSONException, RPXException {
+
+        StringBuilder url = new StringBuilder(RPX_API_URL)
+                .append("mappings")
+                .append("?apiKey=").append(apiKey)
+                .append("&primaryKey=").append(primaryKey);
+
+        HttpClient client = getHttpClient();
+        GetMethod get = new GetMethod(url.toString());
+        try {
+            client.executeMethod(get);
+            String body = get.getResponseBodyAsString();
+            JSONObject jo = new JSONObject(body);
+            RPXException ex = RPXException.fromJSON(jo);
+            if (ex != null) throw ex;
+
+            return MappingsResponse.fromJson(jo);
+        } finally {
+            get.releaseConnection();
+        }
+
+
+    }
+
     public GetContactsResponse getContacts(String identifier) throws JSONException, IOException, RPXException {
         StringBuilder url = new StringBuilder(RPX_API_URL);
         url.append("get_contacts");
         url.append("?apiKey=").append(apiKey);
         url.append("&identifier=").append(identifier);
 
-        HttpClient client = getHttpClient();
         GetMethod get = new GetMethod(url.toString());
-        client.executeMethod(get);
-        String body = get.getResponseBodyAsString();
-        JSONObject jo = new JSONObject(body);
-        RPXException ex = RPXException.fromJSON(jo);
-        if (ex != null) throw ex;
 
-        return GetContactsResponse.fromJson(jo);
+        try {
+            HttpClient client = getHttpClient();
+            client.executeMethod(get);
+            String body = get.getResponseBodyAsString();
+            JSONObject jo = new JSONObject(body);
+            RPXException ex = RPXException.fromJSON(jo);
+            if (ex != null) throw ex;
+
+            return GetContactsResponse.fromJson(jo);
+        } finally {
+            get.releaseConnection();
+        }
     }
 
     public String buildAuthRedirect(Provider provider, String tokenUrl) throws IOException {
@@ -102,7 +136,39 @@ public class DefaultRPXClient implements RPXClient {
             return buildAuthRedirect(new GoogleAuthProvider(), tokenUrl);
 
         }
+        else if (provider == FACEBOOK) {
+             // @todo build FacebookAuthProvider
+        }
+        else if (provider == TWITTER) {
+             // @todo build TwitterAuthProvider
+        }
         throw new IllegalArgumentException("unknown provider"+provider); //shouldn't happen
+    }
+
+    public void setStatus(String identifier, String status) throws IOException, JSONException, RPXException {
+        GetMethod get = null;
+        try {
+            StringBuilder url = new StringBuilder(RPX_API_URL)
+                    .append("set_status")
+                    .append("?apiKey=").append(apiKey)
+                    .append("&identifier").append(identifier)
+                    .append("status").append(URLEncoder.encode(status, "UTF-8"));
+
+            get = new GetMethod(url.toString());
+            HttpClient client = getHttpClient();
+            client.executeMethod(get);
+            String body = get.getResponseBodyAsString();
+            JSONObject jo = new JSONObject(body);
+            RPXException ex = RPXException.fromJSON(jo);
+            if (ex != null) throw ex;
+
+
+        } catch (UnsupportedEncodingException e) {
+            logger.error(e.getMessage(), e);
+            throw new IllegalStateException(e.getMessage(), e);
+        } finally {
+            if (get != null) get.releaseConnection();
+        }
     }
 
     public String buildAuthRedirect(RPXAuthProvider provider, String tokenUrl) {
