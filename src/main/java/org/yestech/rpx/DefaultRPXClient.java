@@ -4,9 +4,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.yestech.rpx.auth.GoogleAuthProvider;
-import org.yestech.rpx.auth.MicrosoftLiveProvider;
-import org.yestech.rpx.auth.RPXAuthProvider;
+import org.yestech.rpx.auth.*;
 import org.yestech.rpx.objectmodel.*;
 import static org.yestech.rpx.objectmodel.RPXUtil.jsonString;
 import static org.yestech.rpx.RPXClient.Provider.*;
@@ -134,13 +132,12 @@ public class DefaultRPXClient implements RPXClient {
         }
         else if (provider == GOOGLE) {
             return buildAuthRedirect(new GoogleAuthProvider(), tokenUrl);
-
         }
         else if (provider == FACEBOOK) {
-             // @todo build FacebookAuthProvider
+             return buildAuthRedirect(new FacebookAuthProvider(), tokenUrl);
         }
         else if (provider == TWITTER) {
-             // @todo build TwitterAuthProvider
+             return buildAuthRedirect(new TwitterAuthProvider(), tokenUrl);
         }
         throw new IllegalArgumentException("unknown provider"+provider); //shouldn't happen
     }
