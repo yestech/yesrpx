@@ -17,9 +17,13 @@ public interface RPXClient {
 
     String buildAuthRedirect(RPXAuthProvider provider, String tokenUrl);
 
+    void setStatus(String identifier, String status) throws IOException, JSONException, RPXException;
+
     static enum Provider {
         GOOGLE,
-        MICROSOFT_LIVE
+        MICROSOFT_LIVE,
+        FACEBOOK,
+        TWITTER
     }
 
     AuthInfoResponse authInfo(String token, boolean extended) throws Exception;
