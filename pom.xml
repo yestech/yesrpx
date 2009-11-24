@@ -48,6 +48,14 @@
                 <role>developer</role>
             </roles>
         </developer>
+        <developer>
+            <id>andynelsen</id>
+            <name>Andy Nelsen</name>
+            <email>andy@redtable.net</email>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
     </developers>
     <dependencies>
         <dependency>
